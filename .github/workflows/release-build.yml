@@ -17,6 +17,8 @@ jobs:
           - target: x86_64-apple-darwin
             archive: zip
     steps:
+      - name: update apt
+        run: sudo apt-get update
       - name: install libuedev
         run: sudo apt-get install -y libudev-dev
       - uses: actions/checkout@master
