@@ -1,0 +1,26 @@
+{
+    "version": "0.1.0",
+    "description": "A command-line utility written in Rust that supports Device Firmware Updates (DFU) for nRF52 devices running Adafruit_nRF52_Bootloader.",
+    "homepage": "https://github.com/blelora/blelora-cli",
+    "license": "MIT",
+    "architecture": {
+        "64bit": {
+            "url": "https://github.com/blelora/blelora-cli/releases/download/0.1.0/blelora-cli_0.1.0_x86_64-pc-windows-gnu.zip",
+            "hash": "b377923d1859aece54a4d02a5f5c32007b96d853e6414617f0925edb6fd7211b"
+        }
+    },
+    "bin": "blelora.exe",
+    "checkver": {
+        "github": "https://github.com/blelora/blelora-cli"
+    },
+    "autoupdate": {
+        "architecture": {
+            "64bit": {
+                "url": "https://github.com/blelora/blelora-cli/releases/download/$version/blelora-cli_$version_x86_64-pc-windows-gnu.zip"
+            }
+        },
+        "hash": {
+            "url": "$url.sha256sum"
+        }
+    }
+}

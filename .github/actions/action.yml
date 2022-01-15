@@ -1,0 +1,26 @@
+name: 'Rust Release binary'
+description: 'Automate publishing Rust build artifacts for GitHub releases through GitHub Actions'
+inputs:
+  RUSTTARGET:
+    description: 'Output target'
+    required: true
+  GITHUB_TOKEN:
+    required: true
+  EXTRA_FILES:
+    description: 'List of extra files to include in build'
+    required: false
+  SRC_DIR:
+    description: 'Path to directory containing Cargo.toml (defaults to project root)'
+    required: false
+  ARCHIVE_TYPES:
+    description: 'List of archive types to publish the binaries with, default "zip", supports zip and all tar formats'
+    required: false
+  PRE_BUILD:
+    description: 'Relative path of script to run before building'
+    required: false
+  POST_BUILD:
+    description: 'Relative path of script to run after building'
+    required: false
+runs:
+  using: 'docker'
+  image: 'docker://ghcr.io/blelora/rust-build:latest'
