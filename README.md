@@ -43,3 +43,8 @@ Upload Firmware over DFU Serial
 ```
 $ blelora dfu serial --package <zip file location or URL to zip> --touch 1200
 ```
+
+## Roadmap
+
+ * [x] DFU Capability
+ * [ ] LoRaWAN Credential Configuration
