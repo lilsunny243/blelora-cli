@@ -5,7 +5,7 @@ A command-line utility written in Rust that supports Device Firmware Updates (DF
 Currently the [WisBlock-RAK4631](https://store.rakwireless.com/products/rak4631-lpwan-node) is the only supported board. The option to specify additional supported boards will be added soon.
 
 ## Install 
-For **macOS(Intel)** users, install [brew](https://brew.sh/) first, then use the install command below:
+For **macOS(Intel & M1)** users, install [brew](https://brew.sh/) first, then use the install command below:
 ```
 brew install blelora/blelora-cli/blelora
 ```
