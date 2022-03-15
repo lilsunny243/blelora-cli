@@ -337,10 +337,23 @@ async fn unpack_package(zip_file_path: &String) -> Package {
             let v: Value = serde_json::from_str(&buffer).unwrap();
             // log::debug!("{}", v["manifest"]);
             package.manifest_json = v.to_owned();
-            package.firmware.firmware_dat_path =
-                unescape(&v["manifest"]["application"]["dat_file"].to_string()).unwrap();
-            package.firmware.firmware_bin_path =
-                unescape(&v["manifest"]["application"]["bin_file"].to_string()).unwrap();
+            if !v["manifest"]["application"].is_null() {
+                log::debug!("Application Firmware Found");
+
+                package.firmware.firmware_dat_path =
+                    unescape(&v["manifest"]["application"]["dat_file"].to_string()).unwrap();
+                package.firmware.firmware_bin_path =
+                    unescape(&v["manifest"]["application"]["bin_file"].to_string()).unwrap();
+            } else if !v["manifest"]["softdevice_bootloader"].is_null() {
+                log::debug!("Bootloader Firmware Found");
+
+                package.firmware.firmware_dat_path =
+                    unescape(&v["manifest"]["softdevice_bootloader"]["dat_file"].to_string())
+                        .unwrap();
+                package.firmware.firmware_bin_path =
+                    unescape(&v["manifest"]["softdevice_bootloader"]["bin_file"].to_string())
+                        .unwrap();
+            }
         }
     }
 
