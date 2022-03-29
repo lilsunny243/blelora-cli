@@ -1,8 +1,8 @@
-use log::LevelFilter;
 use blelora::{
     cmd::{dfu, Opts},
     result::Result,
 };
+use log::LevelFilter;
 
 use std::process;
 use structopt::StructOpt;

@@ -528,7 +528,7 @@ fn send_packet(port: &mut Box<dyn SerialPort>, frame: Vec<u8>, bar: &mut Progres
         let new_now = Instant::now();
         log::debug!("{:?}", new_now.duration_since(now));
 
-        log::debug!("ack: {}", ack);
+        log::debug!("ack: {:?}", ack);
 
         bar.inc(1);
 
@@ -536,8 +536,8 @@ fn send_packet(port: &mut Box<dyn SerialPort>, frame: Vec<u8>, bar: &mut Progres
             break;
         }
 
-        if ack == (last_ack.unwrap() + 1) % 8 {
-            last_ack = Some(ack);
+        if ack.unwrap() == (last_ack.unwrap() + 1) % 8 {
+            last_ack = ack;
             packet_sent = true;
 
             if attempts > 3 {
@@ -548,15 +548,17 @@ fn send_packet(port: &mut Box<dyn SerialPort>, frame: Vec<u8>, bar: &mut Progres
     }
 }
 
-fn get_ack_nr(port: &mut Box<dyn SerialPort>) -> u8 {
+fn get_ack_nr(port: &mut Box<dyn SerialPort>) -> Option<u8> {
     let mut esc_count = 0;
     let mut temp_buf: Vec<u8> = vec![];
 
     while esc_count < 2 {
         let mut serial_buf: Vec<u8> = vec![0; 6];
 
-        port.read(serial_buf.as_mut_slice())
-            .expect("Found no data!");
+        match port.read(serial_buf.as_mut_slice()) {
+            Ok(_) => log::debug!("read successful"),
+            Err(_) => return None,
+        }
         temp_buf.extend(serial_buf);
 
         // log::debug!("serial_buf: {:x?}", temp_buf);
@@ -572,7 +574,7 @@ fn get_ack_nr(port: &mut Box<dyn SerialPort>) -> u8 {
 
     // log::debug!("PC <- target: {:x?}", new_buf);
 
-    return (new_buf[0] >> 3) & 0x07;
+    return Some((new_buf[0] >> 3) & 0x07);
 }
 
 fn hci_packet(frame: Vec<u8>) -> Vec<u8> {
