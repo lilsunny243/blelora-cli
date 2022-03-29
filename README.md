@@ -25,7 +25,7 @@ cargo install blelora
 ## Usage
 ```
 $ blelora --help 
-blelora 0.1.0
+blelora 0.1.1
 Common options
 
 USAGE:
