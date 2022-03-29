@@ -1,4 +1,5 @@
 use crate::{cmd::*, result};
+use std::process;
 
 use serialport::{SerialPort, SerialPortType};
 use std::time::{Duration, Instant};
@@ -185,6 +186,11 @@ impl Cmd {
 
                 log::debug!("len: {}", matching_ports.len());
 
+                if matching_ports.len() == 0 {
+                    println!("The device could not be found. Please make sure your device is plugged in.");
+                    process::exit(1);
+                }
+
                 log::debug!(
                     "opening {} (type {:?})",
                     &matching_ports[0].port_name,
@@ -237,6 +243,11 @@ fn touch(baud: u32) -> result::Result {
         })
         .collect();
     // log::debug!("len: {}", matching_ports.len());
+
+    if matching_ports.len() == 0 {
+        println!("The device could not be found. Please make sure your device is plugged in.");
+        process::exit(1);
+    }
 
     // This will error at the wrong baud, let it
     let _port = serialport::new(&matching_ports[0].port_name, baud)
@@ -530,7 +541,8 @@ fn send_packet(port: &mut Box<dyn SerialPort>, frame: Vec<u8>, bar: &mut Progres
             packet_sent = true;
 
             if attempts > 3 {
-                panic!("Timed out waiting for ACK")
+                println!("The firmware update failed. Please try again.");
+                process::exit(1);
             }
         }
     }
