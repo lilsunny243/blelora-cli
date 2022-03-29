@@ -1079,9 +1079,8 @@ dependencies = [
 
 [[package]]
 name = "serialport"
-version = "4.0.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5d8cd7c0f22290ee2c01457009fa6fc1cae4153d5608a924e5dc423babc2c655"
+version = "4.0.2-alpha.0"
+source = "git+https://gitlab.com/spookyvision1/serialport-rs.git?branch=fix-usb-deprecation#7816e2823c3e56a0552b0d4fb2b6275e27430316"
 dependencies = [
  "CoreFoundation-sys",
  "IOKit-sys",

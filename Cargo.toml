@@ -17,7 +17,7 @@ doc = false
 tokio = { version = "1.12.0", features = ["full"] }
 structopt = "0.3.23"
 anyhow = "1.0.44"
-serialport = "4.0.1"
+serialport = { git = "https://gitlab.com/spookyvision1/serialport-rs.git", branch = "fix-usb-deprecation" }
 bytes = "1.1.0"
 futures = "0.3.17"
 zip = "0.5.13"
