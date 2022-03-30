@@ -1,6 +1,7 @@
 use crate::{cmd::*, result};
 use std::process;
 
+use ferrous_serialport as serialport;
 use serialport::{SerialPort, SerialPortType};
 use std::time::{Duration, Instant};
 use std::{thread, time};

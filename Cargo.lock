@@ -89,12 +89,12 @@ dependencies = [
  "anyhow",
  "bytes",
  "env_logger",
+ "ferrous-serialport",
  "futures",
  "indicatif",
  "log",
  "reqwest",
  "serde_json",
- "serialport",
  "snailquote",
  "structopt",
  "tokio",
@@ -238,6 +238,23 @@ dependencies = [
  "log",
  "regex",
  "termcolor",
+]
+
+[[package]]
+name = "ferrous-serialport"
+version = "4.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "55f15bacc9a6c2eafcdcdfc52fb321140c00b156b180318d16b41e4f55ad5ab8"
+dependencies = [
+ "CoreFoundation-sys",
+ "IOKit-sys",
+ "bitflags",
+ "cfg-if 0.1.10",
+ "libudev",
+ "mach 0.2.3",
+ "nix",
+ "regex",
+ "winapi",
 ]
 
 [[package]]
@@ -1075,22 +1092,6 @@ dependencies = [
  "itoa",
  "ryu",
  "serde",
-]
-
-[[package]]
-name = "serialport"
-version = "4.0.2-alpha.0"
-source = "git+https://gitlab.com/spookyvision1/serialport-rs.git?branch=fix-usb-deprecation#7816e2823c3e56a0552b0d4fb2b6275e27430316"
-dependencies = [
- "CoreFoundation-sys",
- "IOKit-sys",
- "bitflags",
- "cfg-if 0.1.10",
- "libudev",
- "mach 0.2.3",
- "nix",
- "regex",
- "winapi",
 ]
 
 [[package]]

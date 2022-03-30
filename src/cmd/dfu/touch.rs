@@ -2,6 +2,7 @@ use crate::{cmd::*, result};
 
 use std::time::Duration;
 use std::{thread, time};
+use ferrous_serialport as serialport;
 
 #[derive(Debug, StructOpt)]
 /// Initiate Serial Touch
