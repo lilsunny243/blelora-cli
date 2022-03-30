@@ -6,7 +6,7 @@
     "architecture": {
         "64bit": {
             "url": "https://github.com/blelora/blelora-cli/releases/download/0.1.1/blelora-cli_0.1.1_x86_64-pc-windows-gnu.zip",
-            "hash": "bd6cd328469a0f21edfd2f354a2919a920ac2d5a133e898300862fc598b363e3"
+            "hash": "ad2d540e01383e5314ffc2b3b934dce73b301be3ca0a2615dbf881698d01841d"
         }
     },
     "bin": "blelora.exe",
