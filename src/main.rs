@@ -1,5 +1,5 @@
 use blelora::{
-    cmd::{dfu, Opts},
+    cmd::{dfu},
     result::Result,
 };
 use log::LevelFilter;
@@ -9,9 +9,6 @@ use structopt::StructOpt;
 
 #[derive(Debug, StructOpt)]
 pub struct Cli {
-    #[structopt(flatten)]
-    opts: Opts,
-
     #[structopt(flatten)]
     cmd: Cmd,
 }
