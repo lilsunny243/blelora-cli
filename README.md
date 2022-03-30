@@ -22,6 +22,23 @@ With **Cargo**, the Rust package manager:
 ```
 cargo install blelora
 ```
+
+## Update 
+For **macOS(Intel & M1)** users, to update, use the command below:
+```
+brew upgrade blelora
+```
+
+For **Windows** users, to update, use the command below:
+```
+scoop udpate blelora
+```
+
+With **Cargo**, the Rust package manager:  
+```
+cargo install blelora
+```
+
 ## Usage
 ```
 $ blelora --help 
