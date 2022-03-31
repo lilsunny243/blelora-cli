@@ -21,6 +21,10 @@ use std::io::Cursor;
 pub struct Firmware {
     pub firmware_dat_path: String,
     pub firmware_bin_path: String,
+    pub sd_size: u64,
+    pub bl_size: u64,
+    pub application_size: u64,
+    pub mode: u8,
 }
 pub struct Package {
     pub firmware: Firmware,
@@ -32,6 +36,10 @@ impl Default for Firmware {
         Firmware {
             firmware_dat_path: String::new(),
             firmware_bin_path: String::new(),
+            bl_size: 0,
+            sd_size: 0,
+            application_size: 0,
+            mode: 0,
         }
     }
 }
@@ -71,6 +79,13 @@ const DFU_PACKET_MAX_SIZE: u32 = 512;
 const USB_VID: u16 = 0x239a;
 // const USB_PID: u16 = 0x002a;
 
+#[allow(dead_code)]
+const SOFTDEVICE: u8 = 1;
+#[allow(dead_code)]
+const BOOTLOADER : u8 = 2;
+const SD_BL: u8 = 3;
+const APPLICATION: u8 = 4;
+
 #[derive(Debug, StructOpt)]
 /// Initiate DFU transfer
 pub struct Cmd {
@@ -89,7 +104,7 @@ pub struct Cmd {
 
 impl Cmd {
     pub async fn run(self) -> result::Result {
-        let package = unpack_package(&self.package).await;
+        let mut package = unpack_package(&self.package).await;
         let unpacked_zip = std::path::Path::new("nrf_dfu/unpacked_zip/");
 
         let firmware_path: std::path::PathBuf = [
@@ -203,8 +218,6 @@ impl Cmd {
             }
         };
 
-        let program_mode = 4;
-
         println!("Starting Serial DFU");
         let mut bar = ProgressBar::new((firmware_size / 1000) * 2);
 
@@ -214,8 +227,14 @@ impl Cmd {
                 .progress_chars("##-"),
         );
 
+        if package.firmware.mode == APPLICATION {
+            package.firmware.application_size = firmware_size;
+        }
+
         log::debug!("Sending DFU start packet");
-        send_start_dfu(&mut port, program_mode, firmware_size.clone(), &mut bar);
+        send_start_dfu(&mut port, package.firmware.mode, package.firmware.sd_size, package.firmware.bl_size, package.firmware.application_size, &mut bar);
+
+        thread::sleep(time::Duration::from_millis(2000));
 
         log::debug!("Sending DFU init packet");
         send_init_packet(&mut port, firmware_init_path, &mut bar);
@@ -223,7 +242,7 @@ impl Cmd {
         log::debug!("Sending firmware file");
         send_firmware(&mut port, firmware_path2, &mut bar);
 
-        thread::sleep(time::Duration::from_millis(2000));
+        thread::sleep(time::Duration::from_millis(1000));
 
         bar.finish();
 
@@ -356,6 +375,7 @@ async fn unpack_package(zip_file_path: &String) -> Package {
                     unescape(&v["manifest"]["application"]["dat_file"].to_string()).unwrap();
                 package.firmware.firmware_bin_path =
                     unescape(&v["manifest"]["application"]["bin_file"].to_string()).unwrap();
+                package.firmware.mode = APPLICATION;
             } else if !v["manifest"]["softdevice_bootloader"].is_null() {
                 log::debug!("Bootloader Firmware Found");
 
@@ -365,6 +385,11 @@ async fn unpack_package(zip_file_path: &String) -> Package {
                 package.firmware.firmware_bin_path =
                     unescape(&v["manifest"]["softdevice_bootloader"]["bin_file"].to_string())
                         .unwrap();
+                package.firmware.sd_size =
+                    v["manifest"]["softdevice_bootloader"]["sd_size"].as_u64().unwrap();
+                package.firmware.bl_size =
+                    v["manifest"]["softdevice_bootloader"]["bl_size"].as_u64().unwrap();
+                package.firmware.mode = SD_BL;
             }
         }
     }
@@ -413,15 +438,17 @@ async fn unpack_package(zip_file_path: &String) -> Package {
 
 fn send_start_dfu(
     port: &mut Box<dyn SerialPort>,
-    program_mode: u32,
-    firmware_size: u64,
+    program_mode: u8,
+    sd_size: u64,
+    bl_size: u64,
+    application_size: u64,
     bar: &mut ProgressBar,
 ) {
     let mut buf = DFU_START_PACKET.to_ne_bytes().to_vec();
-    buf.extend(program_mode.to_ne_bytes());
-    buf.extend(vec![0x00, 0x00, 0x00, 0x00]);
-    buf.extend(vec![0x00, 0x00, 0x00, 0x00]);
-    buf.extend((firmware_size as u32).to_ne_bytes());
+    buf.extend((program_mode as u32).to_ne_bytes());
+    buf.extend((sd_size as u32).to_ne_bytes());
+    buf.extend((bl_size as u32).to_ne_bytes());
+    buf.extend((application_size as u32).to_ne_bytes());
 
     let packet = hci_packet(buf);
     send_packet(port, packet, bar);
@@ -494,12 +521,12 @@ fn send_firmware(
         frame_count_sent += 1;
         log::debug!("frame_count_sent: {}", frame_count_sent);
         if count % 8 == 0 {
-            thread::sleep(time::Duration::from_millis(1100));
+            thread::sleep(time::Duration::from_millis(150));
         }
         count += 1;
     }
 
-    thread::sleep(time::Duration::from_millis(2000));
+    thread::sleep(time::Duration::from_millis(150));
 
     send_stop_data_dfu(port, bar);
 }
