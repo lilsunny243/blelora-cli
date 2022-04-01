@@ -60,6 +60,23 @@ unsafe fn increment_sequence_number() {
     SEQUENCE_NUMBER = (SEQUENCE_NUMBER + 1) % 8;
 }
 
+/*
+    After Start packet is sent, nrf5x will start to erase flash page, each page takes 2.05 - 89.7 ms
+    nrfutil need to wait accordingly for the image size
+    - (dual bank only) After sending all data -> send command to activate new firmware --> nrf52 erase bank0 and copy image
+    from bank1 to bank0. nrfutil need to wait else IDE will re-open serial --> causing pin reset -> flash corruption.
+*/
+const FLASH_PAGE_SIZE: f64 = 4096.0;
+// Time to erase a page for nrf52832 is (2.05 to 89.7 ms), nrf52840 is ~85 ms max
+const FLASH_PAGE_ERASE_TIME: f64 = 0.0897;
+// Time to write word for nrf52832 is (67.5 to 338 us), nrf52840 is ~41 us max
+const FLASH_WORD_WRITE_TIME: f64 = 0.000100;
+// Time to write a whole page
+const FLASH_PAGE_WRITE_TIME: f64 = (FLASH_PAGE_SIZE/4.0) * FLASH_WORD_WRITE_TIME;
+
+const SERIAL_PORT_TIMEOUT: u64 = 1000;
+const TOUCH_RESET_WAIT_TIME: u64 = 1500; 
+
 const END: u8 = 0xC0;
 const ESC: u8 = 0xDB;
 const ESC_END: u8 = 0xDC;
@@ -176,7 +193,7 @@ impl Cmd {
                 log::debug!("TOUCH SERIAL PORT");
                 touch(x).expect("Touch Failed");
 
-                thread::sleep(time::Duration::from_millis(1500));
+                thread::sleep(time::Duration::from_millis(TOUCH_RESET_WAIT_TIME));
             }
             _ => log::debug!("no touch"),
         }
@@ -186,7 +203,7 @@ impl Cmd {
                 log::debug!("opening {}", &p);
 
                 serialport::new(&p, 115200)
-                    .timeout(Duration::from_millis(3000))
+                    .timeout(Duration::from_millis(SERIAL_PORT_TIMEOUT))
                     .open()?
             }
             _ => {
@@ -213,7 +230,7 @@ impl Cmd {
                     matching_ports[0].port_type
                 );
                 serialport::new(&matching_ports[0].port_name, 115200)
-                    .timeout(Duration::from_millis(3000))
+                    .timeout(Duration::from_millis(SERIAL_PORT_TIMEOUT))
                     .open()?
             }
         };
@@ -233,8 +250,6 @@ impl Cmd {
 
         log::debug!("Sending DFU start packet");
         send_start_dfu(&mut port, package.firmware.mode, package.firmware.sd_size, package.firmware.bl_size, package.firmware.application_size, &mut bar);
-
-        thread::sleep(time::Duration::from_millis(2000));
 
         log::debug!("Sending DFU init packet");
         send_init_packet(&mut port, firmware_init_path, &mut bar);
@@ -436,6 +451,11 @@ async fn unpack_package(zip_file_path: &String) -> Package {
     return package;
 }
 
+fn get_erase_wait_time(firmware_size: u64) -> u64{
+    //timeout is not least than 500 milliseconds
+    return f64::max(500.0, (((firmware_size as f64 * 1.0) / FLASH_PAGE_SIZE) + 1.0)*FLASH_PAGE_ERASE_TIME) as u64;
+}
+
 fn send_start_dfu(
     port: &mut Box<dyn SerialPort>,
     program_mode: u8,
@@ -452,6 +472,9 @@ fn send_start_dfu(
 
     let packet = hci_packet(buf);
     send_packet(port, packet, bar);
+
+    let firmware_size = sd_size + bl_size + application_size;
+    thread::sleep(time::Duration::from_millis(get_erase_wait_time(firmware_size)));
 }
 
 fn send_init_packet(
@@ -521,12 +544,12 @@ fn send_firmware(
         frame_count_sent += 1;
         log::debug!("frame_count_sent: {}", frame_count_sent);
         if count % 8 == 0 {
-            thread::sleep(time::Duration::from_millis(150));
+            thread::sleep(time::Duration::from_millis(FLASH_PAGE_WRITE_TIME as u64));
         }
         count += 1;
     }
 
-    thread::sleep(time::Duration::from_millis(150));
+    thread::sleep(time::Duration::from_millis(FLASH_PAGE_WRITE_TIME as u64));
 
     send_stop_data_dfu(port, bar);
 }
